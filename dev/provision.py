@@ -305,9 +305,11 @@ TBLPROPERTIES (
 spark.sql(
     """
 CREATE TABLE default.test_table_sanitized_character (
-    `letter/abc` string
+    `letter/abc` string,
+    `letter/def` string
 )
 USING iceberg
+PARTITIONED BY (`letter/def`)
 TBLPROPERTIES (
     'format-version'='1'
 );
@@ -318,6 +320,6 @@ spark.sql(
     f"""
 INSERT INTO default.test_table_sanitized_character
 VALUES
-    ('123')
+    ('123', '456')
 """
 )

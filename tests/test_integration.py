@@ -37,7 +37,7 @@ from pyiceberg.expressions import (
 )
 from pyiceberg.io.pyarrow import pyarrow_to_schema
 from pyiceberg.schema import Schema
-from pyiceberg.table import Table
+from pyiceberg.table import Table, FileScanTask
 from pyiceberg.types import (
     BooleanType,
     IntegerType,
@@ -404,3 +404,11 @@ def test_reproduce_issue(table_test_table_sanitized_character: Table) -> None:
     assert len(arrow_table.schema.names), 1
     assert len(table_test_table_sanitized_character.schema().fields), 1
     assert arrow_table.schema.names[0] == table_test_table_sanitized_character.schema().fields[0].name
+
+
+@pytest.mark.integration
+def test_bug_special_character_in_partition_name(table_test_table_sanitized_character: Table) -> None:
+    tasks = table_test_table_sanitized_character.scan().plan_files()
+    assert len(tasks) == 1
+    task: FileScanTask = tasks[0]
+    assert task.file.partition._position_to_field_name[0] == 'letter/def'
