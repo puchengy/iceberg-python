@@ -323,6 +323,26 @@ VALUES
 
 spark.sql(
     """
+CREATE TABLE default.pyang_test (
+    col array<int>
+)
+USING iceberg
+TBLPROPERTIES (
+    'format-version'='1'
+);
+"""
+)
+
+spark.sql(
+    """
+INSERT INTO default.pyang_test
+VALUES
+    (null)
+"""
+)
+
+spark.sql(
+    """
 CREATE TABLE default.test_table_add_column (
     a string
 )

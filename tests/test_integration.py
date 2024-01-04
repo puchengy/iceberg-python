@@ -92,6 +92,10 @@ def table_test_table_version(catalog: Catalog) -> Table:
 def table_test_table_sanitized_character(catalog: Catalog) -> Table:
     return catalog.load_table("default.test_table_sanitized_character")
 
+@pytest.fixture()
+def table_test_py_test(catalog: Catalog) -> Table:
+    return catalog.load_table("default.pyang_test")
+
 
 TABLE_NAME = ("default", "t1")
 
@@ -422,3 +426,18 @@ def test_reproduce_issue(table_test_table_sanitized_character: Table) -> None:
     assert len(arrow_table.schema.names), 1
     assert len(table_test_table_sanitized_character.schema().fields), 1
     assert arrow_table.schema.names[0] == table_test_table_sanitized_character.schema().fields[0].name
+
+
+@pytest.mark.integration
+def test_reproduce_issue(table_test_py_test: Table) -> None:
+    arrow_table = table_test_py_test.scan().to_arrow()
+    pyberg_val = arrow_table['col'].to_pylist()[0]
+    import pyarrow as pa
+    path = table_test_py_test.scan().plan_files()[0].file.file_path
+    # if path:
+    #     raise Exception("pyang debug {}".format(path))
+    scheme, netloc, path = table_test_py_test.io.parse_location(path)
+    fs = table_test_py_test.io.fs_by_scheme(scheme, netloc)
+    arrow_table_direct = pa.parquet.read_table(path, filesystem=fs)
+    direct_val = arrow_table_direct['col'].to_pylist()[0]
+    assert pyberg_val == direct_val
